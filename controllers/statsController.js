@@ -9,13 +9,13 @@ let lastInBytes = 0;
 let lastOtBytes = 0;
 let inband = 0;
 let outband = 0;
-import os from 'os';
-import path from 'path';
-import fs from 'fs';
+import os from "os";
+import path from "path";
+import fs from "fs";
 // import diskstats from 'diskstats';
-import diskinfo from 'node-disk-info';
-import si from 'systeminformation';
-let prevDiskInfo = null; 
+import diskinfo from "node-disk-info";
+import si from "systeminformation";
+let prevDiskInfo = null;
 
 export const getSystemStats = async (req, res) => {
   try {
@@ -24,7 +24,9 @@ export const getSystemStats = async (req, res) => {
     const cpuCount = os.cpus().length;
     const loadAvg = os.loadavg();
 
-    const memoryUsage = Math.round(((totalMemory - freeMemory) / totalMemory) * 100);
+    const memoryUsage = Math.round(
+      ((totalMemory - freeMemory) / totalMemory) * 100
+    );
     const cpuUsage = Math.round((loadAvg[0] / cpuCount) * 100);
 
     const diskInfo = await si.fsSize();
@@ -37,7 +39,9 @@ export const getSystemStats = async (req, res) => {
       // Loop through each disk
       for (const currentDisk of diskInfo) {
         // Find the corresponding disk in the previous disk info
-        const prevDisk = prevDiskInfo.find(prev => prev.fs === currentDisk.fs);
+        const prevDisk = prevDiskInfo.find(
+          (prev) => prev.fs === currentDisk.fs
+        );
         if (prevDisk) {
           // Calculate read and write rates for the current disk
           const readRate = (currentDisk.used - prevDisk.used) / 5; // Assuming a 5-second interval
@@ -95,29 +99,20 @@ export const getStreamStats = async (req, res) => {
 export const getLiveNow = async (req, res) => {
   try {
     const { userId } = req.params;
-    const headers = {
-      Authorization: `Basic ${base64Credentials}`,
-    };
 
-    const user = await User.findById(userId);    
+    const user = await User.findById(userId);
 
     let liveNowChannel;
 
     if (user.superAdmin) {
-      liveNowChannel = await Channel.find({ status: true });
-    } else { 
+      liveNowChannel = await Channel.find({ isBlocked: false, Live: true });
 
-      const response = await fetch("http://localhost:3000/api/streams", {
-        method: "GET",
-        headers,
-      });
-      
-      // const data = await response.json();
+      return res.status(200).json(liveNowChannel);
+    } else {
       liveNowChannel = await Channel.find({ userId: userId, status: true });
-
     }
 
-    res.status(200).json({ data: liveNowChannel });
+    return res.status(200).json(liveNowChannel);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -158,15 +153,16 @@ export const getSingleLiveNow = async (req, res) => {
     const subscribers = live[key].subscribers;
     singleOutBytes = subscribers.reduce((total, sub) => total + sub.bytes, 0);
 
-    const inMbps = parseFloat(((singleInBytes - lastSingleInBytes) / (1024 * 1024)).toFixed(2));
+    const inMbps = parseFloat(
+      ((singleInBytes - lastSingleInBytes) / (1024 * 1024)).toFixed(2)
+    );
 
-    const outMbps = parseFloat(((singleOutBytes - lastSingleOutBytes) / (1024 * 1024)).toFixed(2));
-
-
+    const outMbps = parseFloat(
+      ((singleOutBytes - lastSingleOutBytes) / (1024 * 1024)).toFixed(2)
+    );
 
     lastSingleInBytes = publisherData.bytes;
     lastSingleOutBytes = singleOutBytes;
-
 
     res.status(200).json({ data: { inMbps, outMbps } });
   } catch (error) {

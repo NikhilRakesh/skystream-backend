@@ -68,7 +68,7 @@ app.use("/api/auth", authRouter);
 
 // Test server configuration
 app.get("/", (req, res) => {
-  res.sendStatus(200);
+  res.sendStatus(200);    
 });
 
 export const loadStreamKeys = async () => {

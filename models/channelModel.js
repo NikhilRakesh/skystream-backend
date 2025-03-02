@@ -33,6 +33,10 @@ const channelSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    Live: {
+      type: Boolean,
+      default: false,
+    },
     isBlocked: {
       type: Boolean,
       default: false,
@@ -42,7 +46,15 @@ const channelSchema = new mongoose.Schema(
     },
     sessionId: {
       type: String,
-      default: '',
+      default: "",
+    },
+    client_id: {
+      type: String,
+      default: "",
+    },
+    stream_id: {
+      type: String,
+      default: "",
     },
   },
   {

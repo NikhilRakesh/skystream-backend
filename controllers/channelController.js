@@ -27,8 +27,16 @@ export const removeStreamKey = async (itemToRemove) => {
 
 export const blockChannel = async (req, res) => {
   try {
-    const { channelId } = req.params;
+    const { channelId, streamId } = req.params;
     const { blocked } = req.body;
+
+    if (!blocked && streamId) {
+      const response = await fetch(
+        `https://live.skystream.in/api/v1/clients/${streamId}`,
+        // `https://f509rzm8-1985.inc1.devtunnels.ms/api/v1/clients/${streamId}`,
+        { method: "DELETE" }
+      );
+    }
 
     // Validate inputs
     if (!channelId) {
@@ -40,9 +48,8 @@ export const blockChannel = async (req, res) => {
 
     const channel = await Channel.findById({ _id: channelId });
 
-    // Update the channel based on the blocked value
     const updateFields = !blocked
-      ? { isBlocked: true, status: false }
+      ? { isBlocked: true, status: false, Live: false }
       : { isBlocked: false };
 
     const updatedChannel = await Channel.findByIdAndUpdate(
@@ -56,8 +63,6 @@ export const blockChannel = async (req, res) => {
         await fse.emptyDir(folderPath);
 
         if (channel.status) {
-          // await nms.getSession(data.sessionId).reject();
-
           fs.rmdir(folderPath, { recursive: true }, (err) => {
             if (err) {
               console.error("Error deleting folder:", err);
@@ -133,7 +138,6 @@ export const createChannel = async (req, res) => {
 };
 
 export const getChannel = async (req, res) => {
-
   try {
     const { userId } = req.params;
 
@@ -155,7 +159,6 @@ export const getChannel = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
-
 };
 
 export const deleteChannel = async (req, res) => {
@@ -187,11 +190,9 @@ export const deleteChannel = async (req, res) => {
   }
 };
 
-
 export const validateStreamKey = async (req, res) => {
   try {
-    console.log("here");
-    const { stream_url } = req.body;
+    const { stream_url, client_id, stream_id } = req.body;
 
     const isValidStreamKey = await Channel.findOne({
       streamKey: stream_url,
@@ -199,6 +200,13 @@ export const validateStreamKey = async (req, res) => {
     });
 
     if (isValidStreamKey) {
+      const isValidChannelLive = await Channel.findByIdAndUpdate(
+        {
+          _id: isValidStreamKey._id,
+        },
+        { Live: true, client_id: client_id, stream_id: stream_id }
+      );
+
       res.status(200).json({ code: 0 });
     } else {
       res
@@ -209,3 +217,26 @@ export const validateStreamKey = async (req, res) => {
     console.log(`validateStreamKey error:${error}`);
   }
 };
+
+export const UnVerifyStream = async (req, res) => {
+  try {
+    const { stream_url } = req.body;
+
+    const isValidStreamKey = await Channel.findOne({
+      streamKey: stream_url,
+    });
+
+    if (isValidStreamKey) {
+      const isValidChannelLive = await Channel.findByIdAndUpdate(
+        {
+          _id: isValidStreamKey._id,
+        },
+        { Live: false, client_id: "", stream_id: "" }
+      );
+      res.status(200).json({ code: 0 });
+    }
+  } catch (error) {
+    console.log(`validateStreamKey error:${error}`);
+  }
+};
+     
