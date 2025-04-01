@@ -3,17 +3,15 @@ import User from "../models/userModel.js";
 
 export const createDomain = async (req, res) => {
   try {
-  
     const { domain } = req.body;
     const id = req.params.userId;
-
 
     if (!id) return res.status(401).json({ message: "User id is required" });
 
     if (!domain) return res.status(401).json({ message: "Domain is required" });
 
-    const newDomain = new Domain({ domain })
-    
+    const newDomain = new Domain({ domain });
+
     await newDomain
       .save()
       .then((data) => {
@@ -22,9 +20,8 @@ export const createDomain = async (req, res) => {
       .catch((err) => {
         res.status(400).json({ message: "Domain creation failed", err });
       });
-
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
     res.status(500).json({ message: "Domain creation failed", error });
   }
 };
@@ -42,7 +39,6 @@ export const deleteDomain = async (req, res) => {
     res.status(200).json({ message: "Domain deleted successfully", domain });
 
     // restartServer()
-
   } catch (error) {
     res.status(500).json({ message: "Domain deletion failed", error });
   }
@@ -57,11 +53,15 @@ export const getDomain = async (req, res) => {
     const user = await User.findById(id);
 
     if (!user) return res.status(400).json({ message: "User not found" });
-console.log(user,'user');
+    const allDomains = await Domain.find({});
 
-    const domain = await Domain.find();
-    return res.status(200).json({ message: "Domain found", domain });
-
+    if (user.superAdmin) {
+      return res.status(200).json({ message: "Domains", domains: allDomains });
+    } else {
+      return res
+        .status(200)
+        .json({ message: "Domain", domains: [{ domain: user.domain }] });
+    }
   } catch (error) {
     res.status(500).json({ message: "Domain not found", error });
   }

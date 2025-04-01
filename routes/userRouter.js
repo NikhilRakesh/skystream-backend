@@ -9,6 +9,7 @@ import {
   deleteUser,
   updateUserPermission,
   changeExpiryDate,
+  changePassword,
 
 } from "../controllers/userController.js"
 import { jwtMiddleware } from "../controllers/auth.js";
@@ -35,6 +36,7 @@ userRouter.post("/reset-password", resetPass);
 userRouter.post("/user-permission/:id?", updateUserPermission);
 userRouter.get("/get-permission/:id?", updateUserPermission);
 userRouter.get("/delete/:id?/:userId?", deleteUser);
+userRouter.put("/changepassword/:id?/:userId?", changePassword);
 userRouter.post("/update-expiry/:adminId?/:userId?", changeExpiryDate)
 
 

@@ -224,16 +224,13 @@ export const verifyOtp = (req, res) => {
 
 export const resetPass = async (req, res) => {
   try {
-    //GETTING THE VALUE FROM REQ.BODY
     const { password } = req.body;
-    //IF THE PASSWORD IS NOT FOUND THEN IT WILL SEND A ERROR MESSAGE
     if (!password) {
       return res.status(403).json({ error: "Password field can't be empty" });
     }
 
     const resetEmail = email;
     const encryptedPassword = password;
-    //updating the password as well
     await User.findOneAndUpdate(
       { email: resetEmail },
       { $set: { password: encryptedPassword } },
@@ -357,5 +354,40 @@ export const changeExpiryDate = async (req, res) => {
     return res.status(201).json({ message: "Expiry Date Updated", data: user });
   } catch (error) {
     return res.status(500).json({ message: "Internal Server error" });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const { newPassword } = req.body;
+
+    if (!id) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    const admin = await User.findById({ _id: id });
+
+    if (!admin) {
+      return res.status(401).json({ message: "Not Admin" });
+    }
+
+    if (!userId) {
+      return res.status(401).json({ message: "User Id not found" });
+    }
+
+    const user = await User.findById({ _id: userId });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Server error" });
   }
 };

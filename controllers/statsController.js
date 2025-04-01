@@ -19,6 +19,7 @@ let prevDiskInfo = null;
 
 export const getSystemStats = async (req, res) => {
   try {
+
     const totalMemory = os.totalmem();
     const freeMemory = os.freemem();
     const cpuCount = os.cpus().length;
@@ -34,18 +35,14 @@ export const getSystemStats = async (req, res) => {
     let diskRead = 0;
     let diskWrite = 0;
 
-    // Calculate disk read and write rates if previous disk info is available
     if (prevDiskInfo) {
-      // Loop through each disk
       for (const currentDisk of diskInfo) {
-        // Find the corresponding disk in the previous disk info
         const prevDisk = prevDiskInfo.find(
           (prev) => prev.fs === currentDisk.fs
         );
         if (prevDisk) {
-          // Calculate read and write rates for the current disk
-          const readRate = (currentDisk.used - prevDisk.used) / 5; // Assuming a 5-second interval
-          const writeRate = (currentDisk.size - prevDisk.size) / 5; // Assuming a 5-second interval
+          const readRate = (currentDisk.used - prevDisk.used) / 5;
+          const writeRate = (currentDisk.size - prevDisk.size) / 5;
 
           diskRead += readRate;
           diskWrite += writeRate;
